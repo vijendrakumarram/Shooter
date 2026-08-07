@@ -1,0 +1,83 @@
+# Visual Studio
+.vs/
+.vscode/
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Build files
+Binaries/
+Build/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Unreal generated project files
+*.opensdf
+*.sdf
+*.sln
+*.xcodeproj
+*.xcworkspace
+*.VC.db
+*.VC.opendb
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Crash reports
+crashinfo--*
+
+# Packaging
+*.pak
+
+# Temporary files
+*.tmp
+*.temp
+
+# Python
+__pycache__/
+*.pyc
+
+# Ignore compiled plugins
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Ignore generated files in plugins
+Plugins/*/Saved/
+
+# Ignore Derived Data Cache
+DerivedDataCache/
+
+# Ignore JetBrains Rider caches
+.idea/
+*.DotSettings.user
+
+# Ignore Visual Assist
+*.VAState
+
+# Keep plugin source
+!Plugins/*/Source/**
+
+# Keep Config, Content and Source
+!Config/**
+!Content/**
+!Source/**
+
+# Keep uproject
+!*.uproject
+
+# Git LFS lock file
+.gitlfsconfig
