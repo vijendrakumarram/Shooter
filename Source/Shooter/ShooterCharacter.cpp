@@ -150,13 +150,28 @@ void AShooterCharacter::FireWeapon()
 												ECollisionChannel::ECC_Visibility);
 			if (ScreenTraceHit.bBlockingHit)
 			{
-				BeamEndPoint = ScreenTraceHit.Location; 
+				BeamEndPoint = ScreenTraceHit.Location;
+
+				FHitResult WeaponTraceHit;
+				const FVector WeaponTraceStart{ SocketTransform.GetLocation() };
+				const FVector WeaponTraceEnd{ BeamEndPoint };
+				GetWorld()->LineTraceSingleByChannel(
+					WeaponTraceHit,
+					WeaponTraceStart,
+					WeaponTraceEnd,
+					ECollisionChannel::ECC_Visibility);
+
+				if (WeaponTraceHit.bBlockingHit)
+				{
+					BeamEndPoint = ScreenTraceHit.Location;
+				}
+
 				if (ImpactParticles)
 				{
 					UGameplayStatics::SpawnEmitterAtLocation(
-						GetWorld(), 
-						ImpactParticles, 						
-						ScreenTraceHit.Location);
+						GetWorld(),
+						ImpactParticles,
+						BeamEndPoint);
 				}
 				
 				if (BeamParticles)
