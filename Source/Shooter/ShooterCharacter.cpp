@@ -10,7 +10,12 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Particles/ParticleSystemComponent.h"
 
-AShooterCharacter::AShooterCharacter() : BaseTurnRate(45.f), BaseLookUpRate(45.f)
+AShooterCharacter::AShooterCharacter() : 
+											BaseTurnRate(45.f), 
+											BaseLookUpRate(45.f), 
+											bIsAiming(false), 
+											CameraDefaultFOV(0.f), 
+											CameraZoomedFOV(60.f)	
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -43,6 +48,11 @@ void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (FollowCamera)
+	{
+		CameraDefaultFOV = GetFollowCamera()->FieldOfView;
+		
+	}
 }
 
 // Called every frame
@@ -67,6 +77,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, &AShooterCharacter::FireWeapon);
+	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this, &AShooterCharacter::AimingButtonPressed);
+	PlayerInputComponent->BindAction("AimingButton", IE_Released, this, &AShooterCharacter::AimingButtonReleased);
 }
 
 void AShooterCharacter::MoveForward(float value)
@@ -207,6 +219,18 @@ bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, 
 		return true;
 	}
 	return false;
+}
+
+void AShooterCharacter::AimingButtonPressed()
+{
+	bIsAiming = true;
+	GetFollowCamera()->SetFieldOfView(CameraZoomedFOV);
+}
+
+void AShooterCharacter::AimingButtonReleased()
+{
+	bIsAiming = false;
+	GetFollowCamera()->SetFieldOfView(CameraDefaultFOV);
 }
 
 
