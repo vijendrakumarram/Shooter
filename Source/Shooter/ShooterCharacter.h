@@ -25,6 +25,9 @@ protected:
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
 
+	void Turn(float value);
+	void LookUp(float value);
+
 	void FireWeapon();
 
 	bool GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation);
@@ -32,6 +35,9 @@ protected:
 	void AimingButtonPressed();
 	void AimingButtonReleased();
 	void CameraInterpZoom(float DeltaTime);
+	void SetLookRates();
+
+
 
 public:
 	// Called every frame
@@ -52,6 +58,31 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	float BaseLookUpRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
+	float HipTurnRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
+	float HipLookUpRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
+	float AimingTurnRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
+	float AimingLookUpRate;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true ), meta = (ClampMin = "0.0" , ClampMax = "1.0", UIMin = "0.0"))
+	float MouseHipTurnRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true ), meta = (ClampMin = "0.0" , ClampMax = "1.0", UIMin = "0.0"))
+	float MouseHipLookUpRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true), meta = (ClampMin = "0.0" , ClampMax = "1.0", UIMin = "0.0"))
+	float MouseAimingTurnRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true), meta = (ClampMin = "0.0" , ClampMax = "1.0", UIMin = "0.0"))
+	float MouseAimingLookUpRate;
+	
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
 	class USoundBase* FireSound;
@@ -76,6 +107,7 @@ private:
 	float CameraZoomedFOV;
 
 	float CameraCurrentFOV;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))	
 	float ZoomInterpSpeed;
 
