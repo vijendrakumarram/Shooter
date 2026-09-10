@@ -206,8 +206,8 @@ bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, 
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 	}
 
-	FVector2d CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
-	CrosshairLocation.Y -= 50.f;
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	//CrosshairLocation.Y -= 50.f;
 
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
