@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/BoxComponent.h"
 
+
 // Sets default values
 AItem::AItem()
 {
@@ -15,6 +16,9 @@ AItem::AItem()
 	SetRootComponent(ItemMesh);
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetupAttachment(ItemMesh);
+
+
+	
 }
 
 // Called when the game starts or when spawned
