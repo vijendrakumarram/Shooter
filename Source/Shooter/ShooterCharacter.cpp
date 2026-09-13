@@ -37,9 +37,9 @@ AShooterCharacter::AShooterCharacter() :
 	CrosshairInAirFactor(0.f),
 	CrosshairAimFactor(0.f),
 	CrosshairShootingFactor(0.f),
-	AutomaticFireRate(0.1f),
-	bShouldFire(true),
 	bFireButtonPressed(false),
+	bShouldFire(true),
+	AutomaticFireRate(0.1f),
 	// Bullet fire timer variables
 	ShootTimeDuration(0.05f),
 	bFiringBullet(false)	
@@ -203,7 +203,7 @@ void AShooterCharacter::FireWeapon()
 
 bool AShooterCharacter::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
 {
-	FVector2D ViewportSize;
+	FVector2D ViewportSize = FVector2D();
 
 	if (GEngine && GEngine->GameViewport)
 	{
