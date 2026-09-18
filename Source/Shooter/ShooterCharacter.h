@@ -47,6 +47,8 @@ protected:
 	UFUNCTION()
 	void AutoFireReset();
 
+	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
+
 	void StartCrosshairBulletFire();
 	UFUNCTION()
 	void FinishCrosshairBulletFire();

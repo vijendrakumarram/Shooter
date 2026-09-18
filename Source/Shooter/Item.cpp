@@ -33,7 +33,7 @@ void AItem::BeginPlay()
 	Super::BeginPlay();
 
 	// Hide Pickup Widget
-	//PickupWidget->SetVisibility(false);
+	PickupWidget->SetVisibility(false);
 }
 
 // Called every frame
