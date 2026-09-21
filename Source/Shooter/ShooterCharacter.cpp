@@ -41,15 +41,14 @@ AShooterCharacter::AShooterCharacter() :
 	CrosshairInAirFactor(0.f),
 	CrosshairAimFactor(0.f),
 	CrosshairShootingFactor(0.f),
-	// Bullet fire timer variables
+	bFireButtonPressed(false),
+	bShouldFire(true),
+	AutomaticFireRate(0.1f),
 	ShootTimeDuration(0.05f),
 	bFiringBullet(false),
-	// Automatic fire variables
-	AutomaticFireRate(0.1f),
-	bShouldFire(true),
-	bFireButtonPressed(false),
 	// Item trace variables
-	bShouldTraceForItems(false)
+	bShouldTraceForItems(false),
+	OverlappedItemCount(0)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -384,7 +383,26 @@ void AShooterCharacter::TraceForItems()
 				// Show Item's Pickup Widget
 				HitItem->GetPickupWidget()->SetVisibility(true);
 			}
+
+			// We hit an AItem last frame
+			if (TraceHitItemLastFrame)
+			{
+				if (HitItem != TraceHitItemLastFrame)
+				{
+					// We are hitting a different AItem this frame from last frame
+					// Or AItem is null.
+					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+				}
+			}
+			// Store a reference to HitItem for next frame
+			TraceHitItemLastFrame = HitItem;
 		}
+	}
+	else if (TraceHitItemLastFrame)
+	{
+		// No longer overlapping any items,
+		// Item last frame should not show widget
+		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
 	}
 }
 
@@ -443,7 +461,7 @@ bool AShooterCharacter::TraceUnderCrosshairs(
 	FVector& OutHitLocation)
 {
 	// Get Viewport Size
-	FVector2D ViewportSize;
+	FVector2D ViewportSize = FVector2D::ZeroVector;
 	if (GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);

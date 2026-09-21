@@ -54,13 +54,21 @@ void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 		AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
 		if (ShooterCharacter)
 		{
-			ShooterCharacter->IncrementOverlappedItemCount(-1);
+			ShooterCharacter->IncrementOverlappedItemCount(1);
 		}
 	}
 }
 
 void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (OtherActor)
+	{
+		AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
+		if (ShooterCharacter)
+		{
+			ShooterCharacter->IncrementOverlappedItemCount(-1);
+		}
+	}
 
 }
 
