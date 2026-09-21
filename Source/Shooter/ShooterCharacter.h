@@ -47,9 +47,14 @@ protected:
 	UFUNCTION()
 	void AutoFireReset();
 
+	/**Line trace under crosshairs to determine what the player is aiming at */
 	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
 
+	/** Trace for items  if OverlappedItemCount >0 */
+	void TraceForItems();
+
 	void StartCrosshairBulletFire();
+
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
 
@@ -95,8 +100,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true), meta = (ClampMin = "0.0" , ClampMax = "1.0", UIMin = "0.0"))
 	float MouseAimingLookUpRate;
-	
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
 	class USoundBase* FireSound;
@@ -106,7 +109,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
 	class UAnimMontage* HipFireMontage;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
 	UParticleSystem* ImpactParticles;
@@ -152,6 +154,12 @@ private:
 	bool bFiringBullet;
 	FTimerHandle CrosshairShootTimer;
 
+	/** True when we should trace every frame for items */
+	bool bShouldTraceForItems;
+
+	/** Number of items currently overlapped */
+	int8 OverlappedItemCount;
+
 public:
 
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const
@@ -172,5 +180,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetCrosshairSpreadMultiplier() const;
 	
-
+	FORCEINLINE int8 GetOverlappedItemCount() const{ return OverlappedItemCount; }
+	
+	/**Adds/Subtracts to/from  overlappedItemsCount and updates ShouldTraceForItems */
+	void IncrementOverlappedItemCount(int8 Amount);
 };
