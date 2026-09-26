@@ -57,6 +57,11 @@ protected:
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
 
+	void DropWeapon();
+
+	void SelectButtonPressed();
+	void SelectButtonReleased();
+
 	void StartCrosshairBulletFire();
 
 	UFUNCTION()
