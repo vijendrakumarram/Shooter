@@ -64,6 +64,8 @@ protected:
 
 	void SetActiveStars();
 
+	void SetItemProperties(EItemState State);
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -105,5 +107,5 @@ public:
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
-	FORCEINLINE void SetItemState(EItemState State) { ItemState = State; }
+	void SetItemState(EItemState State); 
 };
