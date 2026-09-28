@@ -183,6 +183,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	AItem* TraceHitItem;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
+	float CameraInterpDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
+	float CameraInterpElevation;
+
 public:
 
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const
@@ -207,4 +213,8 @@ public:
 	
 	/**Adds/Subtracts to/from  overlappedItemsCount and updates ShouldTraceForItems */
 	void IncrementOverlappedItemCount(int8 Amount);
+
+	FVector GetCameraInterpLocation();
+
+	void GetPickupItem(AItem* Item);
 };
