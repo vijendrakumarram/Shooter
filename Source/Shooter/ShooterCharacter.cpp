@@ -91,9 +91,8 @@ void AShooterCharacter::BeginPlay()
 		CameraDefaultFOV = GetFollowCamera()->FieldOfView;
 		CameraCurrentFOV = CameraDefaultFOV;
 	}
-
+	// Spawn the default weapon and equip it
 	EquipWeapon(SpawnDefaultWeapon());
-
 }
 
 void AShooterCharacter::MoveForward(float Value)
@@ -375,90 +374,6 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 		CrosshairShootingFactor;
 }
 
-void AShooterCharacter::TraceForItems()
-{
-	if (bShouldTraceForItems)
-	{
-		FHitResult ItemTraceResult;
-		FVector HitLocation;
-		TraceUnderCrosshairs(ItemTraceResult, HitLocation);
-		if (ItemTraceResult.bBlockingHit)
-		{
-			AItem* HitItem = Cast<AItem>(ItemTraceResult.GetActor());
-			if (HitItem && HitItem->GetPickupWidget())
-			{
-				// Show Item's Pickup Widget
-				HitItem->GetPickupWidget()->SetVisibility(true);
-			}
-
-			// We hit an AItem last frame
-			if (TraceHitItemLastFrame)
-			{
-				if (HitItem != TraceHitItemLastFrame)
-				{
-					// We are hitting a different AItem this frame from last frame
-					// Or AItem is null.
-					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
-				}
-			}
-			// Store a reference to HitItem for next frame
-			TraceHitItemLastFrame = HitItem;
-		}
-	}
-	else if (TraceHitItemLastFrame)
-	{
-		// No longer overlapping any items,
-		// Item last frame should not show widget
-		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
-	}
-}
-
-AWeapon* AShooterCharacter::SpawnDefaultWeapon()
-{
-	if (DefaultWeaponClass)
-	{
-		return GetWorld()->SpawnActor<AWeapon>(DefaultWeaponClass);
-	}
-
-	return nullptr;
-}
-
-void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
-{
-	if (WeaponToEquip)
-	{
-		const USkeletalMeshSocket* HandSocket = GetMesh()->GetSocketByName(
-			FName("RightHandSocket"));
-		if (HandSocket)
-		{
-			HandSocket->AttachActor(WeaponToEquip, GetMesh());
-		}
-		EquippedWeapon = WeaponToEquip;
-		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
-	}
-}
-
-void AShooterCharacter::DropWeapon()
-{
-	if (EquippedWeapon)
-	{
-		FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
-		EquippedWeapon->GetItemMesh()->DetachFromComponent(DetachmentTransformRules);
-
-		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
-		EquippedWeapon->ThrowWeapon();
-	}
-}
-
-void AShooterCharacter::SelectButtonPressed()
-{
-	DropWeapon();
-}
-
-void AShooterCharacter::SelectButtonReleased()
-{
-}
-
 void AShooterCharacter::StartCrosshairBulletFire()
 {
 	bFiringBullet = true;
@@ -514,7 +429,7 @@ bool AShooterCharacter::TraceUnderCrosshairs(
 	FVector& OutHitLocation)
 {
 	// Get Viewport Size
-	FVector2D ViewportSize = FVector2D::ZeroVector;
+	FVector2D ViewportSize;
 	if (GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
@@ -552,6 +467,105 @@ bool AShooterCharacter::TraceUnderCrosshairs(
 	return false;
 }
 
+void AShooterCharacter::TraceForItems()
+{
+	if (bShouldTraceForItems)
+	{
+		FHitResult ItemTraceResult;
+		FVector HitLocation;
+		TraceUnderCrosshairs(ItemTraceResult, HitLocation);
+		if (ItemTraceResult.bBlockingHit)
+		{
+			TraceHitItem = Cast<AItem>(ItemTraceResult.GetActor());
+			if (TraceHitItem && TraceHitItem->GetPickupWidget())
+			{
+				// Show Item's Pickup Widget
+				TraceHitItem->GetPickupWidget()->SetVisibility(true);
+			}
+
+			// We hit an AItem last frame
+			if (TraceHitItemLastFrame)
+			{
+				if (TraceHitItem != TraceHitItemLastFrame)
+				{
+					// We are hitting a different AItem this frame from last frame
+					// Or AItem is null.
+					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+				}
+			}
+			// Store a reference to HitItem for next frame
+			TraceHitItemLastFrame = TraceHitItem;
+		}
+	}
+	else if (TraceHitItemLastFrame)
+	{
+		// No longer overlapping any items,
+		// Item last frame should not show widget
+		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+	}
+}
+
+AWeapon* AShooterCharacter::SpawnDefaultWeapon()
+{
+	// Check the TSubclassOf variable
+	if (DefaultWeaponClass)
+	{
+		// Spawn the Weapon
+		return GetWorld()->SpawnActor<AWeapon>(DefaultWeaponClass);
+	}
+
+	return nullptr;
+}
+
+void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip)
+	{
+		// Get the Hand Socket
+		const USkeletalMeshSocket* HandSocket = GetMesh()->GetSocketByName(
+			FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			// Attach the Weapon to the hand socket RightHandSocket
+			HandSocket->AttachActor(WeaponToEquip, GetMesh());
+		}
+		// Set EquippedWeapon to the newly spawned Weapon
+		EquippedWeapon = WeaponToEquip;
+		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
+	}
+}
+
+void AShooterCharacter::DropWeapon()
+{
+	if (EquippedWeapon)
+	{
+		FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+		EquippedWeapon->GetItemMesh()->DetachFromComponent(DetachmentTransformRules);
+
+		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
+		EquippedWeapon->ThrowWeapon();
+	}
+}
+
+void AShooterCharacter::SelectButtonPressed()
+{
+	if (TraceHitItem)
+	{
+		auto TraceHitWeapon = Cast<AWeapon>(TraceHitItem);
+		SwapWeapon(TraceHitWeapon);
+	}
+}
+
+void AShooterCharacter::SelectButtonReleased()
+{
+}
+
+void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
+{
+	DropWeapon();
+	EquipWeapon(WeaponToSwap);
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -563,7 +577,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 	SetLookRates();
 	// Calculate crosshair spread multiplier
 	CalculateCrosshairSpread(DeltaTime);
-	// Check OverlappedItemCount, then trace for Items
+	// Check OverlappedItemCount, then trace for items
 	TraceForItems();
 }
 
@@ -617,5 +631,4 @@ void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
 		bShouldTraceForItems = true;
 	}
 }
-
 

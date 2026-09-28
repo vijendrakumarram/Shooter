@@ -64,6 +64,8 @@ protected:
 
 	void StartCrosshairBulletFire();
 
+	void SwapWeapon(AWeapon* WeaponToSwap);
+
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
 
@@ -177,6 +179,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	AItem* TraceHitItem;
 
 public:
 
