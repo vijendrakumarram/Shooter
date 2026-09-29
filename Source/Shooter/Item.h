@@ -68,6 +68,7 @@ protected:
 
 	void FinishInterping();
 
+	void ItemInterp(float DeltaTime);
 
 public:
 	// Called every frame
