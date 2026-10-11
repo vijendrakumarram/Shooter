@@ -6,6 +6,14 @@
 #include "GameFramework/Character.h"
 #include "ShooterCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class EAmmoType: uint8
+{
+	EAT_9mm UMETA(DisplayName = "9mm"),
+	EAT_AR UMETA(DisplayName = "AssaultRifle"),
+	EAT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -66,8 +74,11 @@ protected:
 
 	void SwapWeapon(AWeapon* WeaponToSwap);
 
+	void InitializeAmmoMap();
+
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
+
 
 public:
 	// Called every frame
@@ -188,6 +199,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = true))
 	float CameraInterpElevation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	TMap<EAmmoType, int32> AmmoMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	int32 Starting9mmAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	int32 StartingARAmmo;
 
 public:
 

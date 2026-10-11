@@ -55,7 +55,11 @@ AShooterCharacter::AShooterCharacter() :
 	OverlappedItemCount(0),
 
 	CameraInterpDistance(250.f),
-	CameraInterpElevation(65.f)
+	CameraInterpElevation(65.f),
+
+	Starting9mmAmmo(85),
+	StartingARAmmo(120)
+
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -96,6 +100,8 @@ void AShooterCharacter::BeginPlay()
 	}
 	// Spawn the default weapon and equip it
 	EquipWeapon(SpawnDefaultWeapon());
+
+	InitializeAmmoMap();
 }
 
 void AShooterCharacter::MoveForward(float Value)
@@ -566,6 +572,12 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 {
 	DropWeapon();
 	EquipWeapon(WeaponToSwap);
+}
+
+void AShooterCharacter::InitializeAmmoMap()
+{
+	AmmoMap.Add(EAmmoType::EAT_9mm, Starting9mmAmmo);
+	AmmoMap.Add(EAmmoType::EAT_AR, StartingARAmmo);
 }
 
 // Called every frame
