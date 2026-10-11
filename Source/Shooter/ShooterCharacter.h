@@ -76,6 +76,8 @@ protected:
 
 	void InitializeAmmoMap();
 
+	bool WeaponHasAmmo();
+
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
 
