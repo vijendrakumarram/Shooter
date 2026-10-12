@@ -62,6 +62,10 @@ protected:
 
 	void StartFireTimer();
 
+	void ReloadButtonPressed();
+
+	void ReloadWeapon();
+
 	UFUNCTION()
 	void AutoFireReset();
 
@@ -229,6 +233,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	ECombatState CombatState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
+	UAnimMontage* ReloadMontage;
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 public:
 

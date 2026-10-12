@@ -385,8 +385,27 @@ void AShooterCharacter::StartFireTimer()
 		this,
 		&AShooterCharacter::AutoFireReset,
 		AutomaticFireRate);
+}
 
+void AShooterCharacter::ReloadButtonPressed()
+{
+	ReloadWeapon();
+}
 
+void AShooterCharacter::ReloadWeapon()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
+	if (true)
+	{
+		FName MontageSection(TEXT("Reload SMG"));
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && ReloadMontage)
+		{
+			AnimInstance->Montage_Play(ReloadMontage);
+			AnimInstance->Montage_JumpToSection(MontageSection);
+		}
+	}
 }
 
 void AShooterCharacter::AutoFireReset()
@@ -402,7 +421,7 @@ void AShooterCharacter::AutoFireReset()
 	}
 	else
 	{
-
+		ReloadWeapon();
 	}
 }
 
@@ -661,6 +680,14 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		&AShooterCharacter::SelectButtonPressed);
 	PlayerInputComponent->BindAction("Select", IE_Released, this,
 		&AShooterCharacter::SelectButtonReleased);
+		
+	PlayerInputComponent->BindAction("ReloadButton", IE_Released, this,
+		&AShooterCharacter::ReloadButtonPressed);
+}
+
+void AShooterCharacter::FinishReloading()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 float AShooterCharacter::GetCrosshairSpreadMultiplier() const
