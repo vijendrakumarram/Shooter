@@ -14,6 +14,16 @@ enum class EAmmoType: uint8
 	EAT_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
+	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimerInProgress"),
+	ECS_Reloading UMETA(DisplayName = "Reloading"),
+	//ECS_Equipping UMETA(DisplayName = "Equipping"),
+	ECS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -77,6 +87,12 @@ protected:
 	void InitializeAmmoMap();
 
 	bool WeaponHasAmmo();
+
+	void PlayFireSound();
+
+	void SendBullet();
+
+	void PlayGunfireMontage();
 
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
@@ -210,6 +226,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	int32 StartingARAmmo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	ECombatState CombatState;
 
 public:
 
