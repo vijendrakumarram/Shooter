@@ -7,7 +7,9 @@ AWeapon::AWeapon() :
 	ThrowWeaponTime(0.7f),
 	bFalling(false),
 	Ammo(0),
-	WeaponType(EWeaponType::EWS_SubMachineGun)
+	WeaponType(EWeaponType::EWT_SubmachineGun),
+	AmmoType(EAmmoType::EAT_9mm),
+	ReloadMontageSection(FName(TEXT("Reload SMG")))
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -48,20 +50,20 @@ void AWeapon::ThrowWeapon()
 
 }
 
+void AWeapon::StopFalling()
+{
+	bFalling = false;
+	SetItemState(EItemState::EIS_Pickup);
+}
+
 void AWeapon::DecrementAmmo()
 {
-	if (Ammo - 1 <=0)
+	if (Ammo - 1 <= 0)
 	{
 		Ammo = 0;
 	}
 	else
 	{
-		--Ammo;	
+		--Ammo;
 	}
-}
-
-void AWeapon::StopFalling()
-{
-	bFalling = false;
-	SetItemState(EItemState::EIS_Pickup);
 }
