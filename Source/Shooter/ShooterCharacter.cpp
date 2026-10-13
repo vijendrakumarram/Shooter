@@ -703,6 +703,32 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void AShooterCharacter::FinishReloading()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+
+	if (EquippedWeapon == nullptr) return;
+
+	const auto AmmoType{ EquippedWeapon->GetAmmoType() };
+
+	if(AmmoMap.Contains(AmmoType))
+	{
+		// Amount of ammo the character is carrying for the equipped weapon
+		int32 CarriedAmmo = AmmoMap[AmmoType];
+		// Amount of ammo the weapon needs to be fully loaded
+		const int32 MagEmptySpace = EquippedWeapon->GetMagzineCapacity() - EquippedWeapon->GetAmmo();
+		if (MagEmptySpace > CarriedAmmo)
+		{
+			// Reload with all the ammo we're carrying
+			EquippedWeapon->ReloadAmmo(CarriedAmmo);
+			CarriedAmmo = 0;
+			AmmoMap.Add(AmmoType, CarriedAmmo);
+		}
+		else
+		{
+			// Reload to full capacity and remove that from the carried ammo
+			EquippedWeapon->ReloadAmmo(MagEmptySpace);
+			CarriedAmmo -= MagEmptySpace;
+			AmmoMap.Add(AmmoType, CarriedAmmo);
+		}
+	}
 }
 
 float AShooterCharacter::GetCrosshairSpreadMultiplier() const
