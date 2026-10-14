@@ -63,6 +63,14 @@ protected:
 
 	bool CarryingAmmo();
 
+	UFUNCTION(BlueprintCallable)
+	void GrabClip();
+
+	UFUNCTION(BlueprintCallable)
+	void ReleaseClip();
+
+	
+
 	UFUNCTION()
 	void AutoFireReset();
 
@@ -236,6 +244,12 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	FTransform ClipTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	USceneComponent* HandSceneComponent;
 
 public:
 
