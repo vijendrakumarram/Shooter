@@ -59,7 +59,8 @@ AShooterCharacter::AShooterCharacter() :
 
 	Starting9mmAmmo(85),
 	StartingARAmmo(120),
-	CombatState(ECombatState::ECS_Unoccupied)
+	CombatState(ECombatState::ECS_Unoccupied),
+	bCrouching(false)
 
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -446,6 +447,20 @@ void AShooterCharacter::ReleaseClip()
 	EquippedWeapon->SetMovingClip(false);
 }
 
+void AShooterCharacter::CrouchButtonPressed()
+{ 
+	if(!GetCharacterMovement()->IsFalling())
+	{
+		//Crouch();
+		bCrouching = !bCrouching;
+	}
+	/*else
+	{
+		UnCrouch();
+		bCrouching = false;
+	}*/
+}
+
 void AShooterCharacter::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
@@ -727,6 +742,9 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		
 	PlayerInputComponent->BindAction("ReloadButton", IE_Released, this,
 		&AShooterCharacter::ReloadButtonPressed);
+
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this,
+		&AShooterCharacter::CrouchButtonPressed);
 }
 
 void AShooterCharacter::FinishReloading()
