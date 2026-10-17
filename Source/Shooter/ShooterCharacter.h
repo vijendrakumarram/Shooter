@@ -71,6 +71,8 @@ protected:
 
 	void CrouchButtonPressed();
 
+	virtual void Jump() override;
+
 	UFUNCTION()
 	void AutoFireReset();
 
@@ -105,7 +107,6 @@ protected:
 
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
-
 
 public:
 	// Called every frame
@@ -251,8 +252,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	USceneComponent* HandSceneComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	bool bCrouching;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float BaseMovementSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float CrouchMovementSpeed;
 
 public:
 
