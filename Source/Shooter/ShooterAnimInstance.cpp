@@ -21,8 +21,7 @@ UShooterAnimInstance::UShooterAnimInstance() :
 	Pitch(0.f),
 	bReloading(false),
 	OffsetState(EOffsetState::EOS_Hip),
-	RecoilWeight(1.0f),
-	bTurningInPlace(false)
+	RecoilWeight(1.0f)
 {
 
 }
@@ -126,7 +125,6 @@ void UShooterAnimInstance::TurnInPlace()
 		const float Turning{ GetCurveValue(TEXT("Turning")) };
 		if (Turning > 0)
 		{
-			bTurningInPlace = true;
 			RotationCurveLastFrame = RotationCurve;
 			RotationCurve = GetCurveValue(TEXT("Rotation"));
 			const float DeltaRotation{ RotationCurve - RotationCurveLastFrame };
@@ -141,11 +139,22 @@ void UShooterAnimInstance::TurnInPlace()
 				RootYawOffset > 0 ? RootYawOffset -= YawExcess : RootYawOffset += YawExcess;
 			}
 		}
+	}
+
+	if (bTurningInPlace)
+	{
+		if (bReloading)
+		{
+			RecoilWeight = 1.f;
+		}
 		else
 		{
-			bTurningInPlace = false;
+			RecoilWeight = 0.f;
 		}
-		if (bTurningInPlace)
+	}
+	else // not turning in place
+	{
+		if (bCrouching)
 		{
 			if (bReloading)
 			{
@@ -153,37 +162,21 @@ void UShooterAnimInstance::TurnInPlace()
 			}
 			else
 			{
-				RecoilWeight = 0.f;
+				RecoilWeight = 0.1f;
 			}
-			
 		}
 		else
 		{
-			if (bCrouching)
+			if (bAiming)
 			{
-				if (bReloading)
-				{
-					RecoilWeight = 1.f;
-				}
-				else
-				{
-					RecoilWeight = 0.1f;
-				}
+				RecoilWeight = 1.f;
 			}
 			else
 			{
-				if (bAiming ||bReloading)
-				{
-					RecoilWeight = 1.f;
-				}
-				else
-				{
-					RecoilWeight = 0.5f;
-				}
+				RecoilWeight = 0.5f;
 			}
 		}
 	}
-
 }
 
 void UShooterAnimInstance::Lean(float DeltaTime)
@@ -198,5 +191,4 @@ void UShooterAnimInstance::Lean(float DeltaTime)
 	const double Interp{ FMath::FInterpTo(YawDelta, Target, DeltaTime, 6.f) };
 	YawDelta = FMath::Clamp(Interp, -90.f, 90.f);
 
-	
 }
