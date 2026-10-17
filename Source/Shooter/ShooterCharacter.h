@@ -75,6 +75,10 @@ protected:
 
 	void InterpCapsuleHalfHeight(float DeltaTime);
 
+	void Aim();
+
+	void StopAiming();
+		
 	UFUNCTION()
 	void AutoFireReset();
 
@@ -280,6 +284,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	float CrouchingGroundFriction;
+
+	bool bAimingButtonPressed;
 
 public:
 
