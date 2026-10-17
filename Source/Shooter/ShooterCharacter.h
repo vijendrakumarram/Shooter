@@ -73,6 +73,8 @@ protected:
 
 	virtual void Jump() override;
 
+	void InterpCapsuleHalfHeight(float DeltaTime);
+
 	UFUNCTION()
 	void AutoFireReset();
 
@@ -260,6 +262,21 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	float CrouchMovementSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float CurrentCapsuleHalfHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float StandingCapsuleHalfHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float CrouchingCapsuleHalfHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float BaseGroundFriction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	float CrouchingGroundFriction;
 
 public:
 
