@@ -18,9 +18,11 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void SetItemProperties(EItemState State) override;
 
 private:
 
