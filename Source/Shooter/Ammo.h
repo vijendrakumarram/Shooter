@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Item.h"
+#include "AmmoType.h"
 #include "Ammo.generated.h"
+
 
 /**
  * 
@@ -26,8 +28,14 @@ protected:
 
 private:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Ammo, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* AmmoMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo, meta = (AllowPrivateAccess = "true"))
+	EAmmoType AmmoType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo, meta = (AllowPrivateAccess = "true"))
+	UTexture2D* AmmoIconTexture;
 
 public:
 	FORCEINLINE UStaticMeshComponent* GetAmmoMesh() const { return AmmoMesh; }
