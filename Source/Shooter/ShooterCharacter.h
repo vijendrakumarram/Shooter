@@ -7,8 +7,6 @@
 #include "AmmoType.h"
 #include "ShooterCharacter.generated.h"
 
-
-
 UENUM(BlueprintType)
 enum class ECombatState : uint8
 {
@@ -17,6 +15,17 @@ enum class ECombatState : uint8
 	ECS_Reloading UMETA(DisplayName = "Reloading"),
 	//ECS_Equipping UMETA(DisplayName = "Equipping"),
 	ECS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
+USTRUCT(BlueprintType)
+struct FInterpLocation
+{
+	GENERATED_BODY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SceneComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 ItemCount;
 };
 
 UCLASS()
@@ -78,6 +87,10 @@ protected:
 	void Aim();
 
 	void StopAiming();
+
+	void PickupAmmo(class AAmmo* Ammo);
+
+	void InitializeInterpLocations();
 		
 	UFUNCTION()
 	void AutoFireReset();
@@ -308,6 +321,9 @@ private:
 	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	USceneComponent* InterpComp6;
 
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TArray<FInterpLocation> InterpLocations;
+
 public:
 
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const
@@ -339,4 +355,5 @@ public:
 
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
 	FORCEINLINE bool GetCrouching() const { return bCrouching; }
+	FInterpLocation GetInterpLocation(int32 Index);
 };

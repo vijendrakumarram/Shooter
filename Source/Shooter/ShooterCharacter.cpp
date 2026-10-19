@@ -119,14 +119,6 @@ AShooterCharacter::AShooterCharacter() :
 	InterpComp6 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 6"));
 	InterpComp6->SetupAttachment(GetFollowCamera());
 
-
-
-
-
-
-
-
-
 }
 
 // Called when the game starts or when spawned
@@ -144,6 +136,8 @@ void AShooterCharacter::BeginPlay()
 
 	InitializeAmmoMap();
 	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+
+	InitializeInterpLocations();
 }
 
 void AShooterCharacter::MoveForward(float Value)
@@ -564,6 +558,30 @@ void AShooterCharacter::StopAiming()
 	}
 }
 
+void AShooterCharacter::InitializeInterpLocations()
+{
+	FInterpLocation WeaponLocation{ WeaponInterpComp, 0 };
+	InterpLocations.Add(WeaponLocation);
+
+	FInterpLocation InterpLocation1{ InterpComp1, 0 };
+	InterpLocations.Add(InterpLocation1);
+
+	FInterpLocation InterpLocation2{ InterpComp2, 0 };
+	InterpLocations.Add(InterpLocation2);
+
+	FInterpLocation InterpLocation3{ InterpComp3, 0 };
+	InterpLocations.Add(InterpLocation3);
+
+	FInterpLocation InterpLocation4{ InterpComp4, 0 };
+	InterpLocations.Add(InterpLocation4);
+
+	FInterpLocation InterpLocation5{ InterpComp5, 0 };
+	InterpLocations.Add(InterpLocation5);
+
+	FInterpLocation InterpLocation6{ InterpComp6, 0};
+	InterpLocations.Add(InterpLocation6);
+	
+}
 void AShooterCharacter::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
@@ -923,5 +941,14 @@ void AShooterCharacter::GetPickupItem(AItem* Item)
 	{
 		SwapWeapon(Weapon);
 	}
+}
+
+FInterpLocation AShooterCharacter::GetInterpLocation(int32 Index)
+{
+	if (Index <= InterpLocations.Num())
+	{
+		return InterpLocations[Index];
+	}
+	return FInterpLocation();
 }
 
