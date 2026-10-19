@@ -287,6 +287,27 @@ private:
 
 	bool bAimingButtonPressed;
 
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* WeaponInterpComp;
+
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* InterpComp1;
+
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* InterpComp2;
+
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* InterpComp3;
+	
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* InterpComp4;
+
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* InterpComp5;
+
+	UPROPERTY(EditDefaultsonly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	USceneComponent* InterpComp6;
+
 public:
 
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const
