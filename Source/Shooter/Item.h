@@ -84,6 +84,7 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void PlayEquipSound();
 
 private:
 	/** Skeletal Mesh for the item */
@@ -168,6 +169,9 @@ private:
 	int32 InterpLocIndex;
 
 	FVector GetInterpLocation();
+
+	void PlayPickupSound();
+	
 
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
