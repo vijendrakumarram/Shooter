@@ -172,7 +172,7 @@ private:
 
 	void PlayPickupSound();
 	
-
+	virtual void InitializeCustomDepth();
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -184,4 +184,9 @@ public:
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
 	/** Called from the AShooterCharacter class */
 	void StartItemCurve(AShooterCharacter* Char);
+
+
+	virtual void EnableCustomDepth();
+
+	virtual void DisableCustomDepth();
 };
