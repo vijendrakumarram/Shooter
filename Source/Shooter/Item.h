@@ -185,6 +185,9 @@ private:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+	void EnableGlowMaterial();
+	void DisableGlowMaterial();
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }

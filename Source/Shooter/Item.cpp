@@ -214,7 +214,10 @@ void AItem::FinishInterping()
 		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
 	}
-		SetActorScale3D(FVector(1.f));
+	SetActorScale3D(FVector(1.f));
+
+	DisableGlowMaterial();
+	DisableCustomDepth();
 }
 
 void AItem::ItemInterp(float DeltaTime)
@@ -335,6 +338,25 @@ void AItem::OnConstruction(const FTransform& Transform)
 	{
 		DynamicMaterialInstance = UMaterialInstanceDynamic::Create(MaterialInstance, this);
 		ItemMesh->SetMaterial(MaterialIndex, DynamicMaterialInstance);
+	}
+	EnableGlowMaterial();
+}
+
+void AItem::EnableGlowMaterial()
+{
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 0);
+	}
+	
+}
+
+void AItem::DisableGlowMaterial()
+{
+
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1.f);
 	}
 }
 
