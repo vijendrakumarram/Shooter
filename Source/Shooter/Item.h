@@ -35,7 +35,8 @@ enum class EItemType : uint8
 {
 	EIT_Ammo UMETA(DisplayName = "Ammo"),
 	EIT_Weapon UMETA(DisplayName = "Weapon"),
-	EIT_MAX UMETA(DisplayName = "DefaultMax")
+
+	EIT_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
 UCLASS()
@@ -73,7 +74,7 @@ protected:
 	void SetActiveStars();
 
 	/** Sets properties of the Item's components based on State */
-	 virtual void SetItemProperties(EItemState State);
+	virtual void SetItemProperties(EItemState State);
 
 	/** Called when ItemInterpTimer is finished */
 	void FinishInterping();
@@ -81,9 +82,23 @@ protected:
 	/** Handles item interpolation when in the EquipInterping state */
 	void ItemInterp(float DeltaTime);
 
+	/** Get interp location based on the item type */
+	FVector GetInterpLocation();
+
+	void PlayPickupSound();
+
+	virtual void InitializeCustomDepth();
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	void EnableGlowMaterial();
+	void DisableGlowMaterial();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// Called in AShooterCharacter::GetPickupItem
 	void PlayEquipSound();
 
 private:
@@ -153,40 +168,39 @@ private:
 	/** Initial Yaw offset between the camera and the interping item */
 	float InterpInitialYawOffset;
 
+	/** Curve used to scale the item when interping */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* ItemScaleCurve;
 
+	/** Sound played when Item is picked up */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	class USoundCue* PickupSound;
 
+	/** Sound played when the Item is equipped */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	USoundCue* EquipSound;
 
+	/** Enum for the type of item this Item is */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	EItemType ItemType;
 
+	/** Index of the interp location this item is interping to */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	int32 InterpLocIndex;
 
+	/** Index for the material we'd like to change at runtime */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	int32 MaterialIndex;
 
+	/** Dynamic instance that we can change at runtime */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	UMaterialInstanceDynamic* DynamicMaterialInstance;
 
+	/** Material Instance used with the Dynamic Material Instance */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	UMaterialInstance* MaterialInstance;
 
-	FVector GetInterpLocation();
-
-	void PlayPickupSound();
-	
-	virtual void InitializeCustomDepth();
-
-	virtual void OnConstruction(const FTransform& Transform) override;
-
-	void EnableGlowMaterial();
-	void DisableGlowMaterial();
+	bool bCanChangeCustomDepth;
 
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
@@ -197,11 +211,11 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
+	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
+
 	/** Called from the AShooterCharacter class */
 	void StartItemCurve(AShooterCharacter* Char);
 
-
 	virtual void EnableCustomDepth();
-
 	virtual void DisableCustomDepth();
 };
