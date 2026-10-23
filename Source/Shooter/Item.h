@@ -23,7 +23,7 @@ enum class EItemState : uint8
 {
 	EIS_Pickup UMETA(DisplayName = "Pickup"),
 	EIS_EquipInterping UMETA(DisplayName = "EquipInterping"),
-	EIS_PickedUp UMETA(DisplayName = "PickedUp"),
+	EIS_PickUp UMETA(DisplayName = "PickUp"),
 	EIS_Equipped UMETA(DisplayName = "Equipped"),
 	EIS_Falling UMETA(DisplayName = "Falling"),
 

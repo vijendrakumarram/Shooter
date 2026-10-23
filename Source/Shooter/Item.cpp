@@ -369,7 +369,7 @@ void AItem::EnableGlowMaterial()
 
 void AItem::UpdatePulse()
 {
-	if (ItemState == EItemState::EIS_PickedUp) return;
+	if (ItemState == EItemState::EIS_PickUp) return;
 
 	const float ElapsedTime = GetWorldTimerManager().GetTimerElapsed(PulseTimer);
 	if (PulseCurve)
@@ -413,7 +413,7 @@ void AItem::ResetPulseTimer()
 
 void AItem::StartPulseTimer()
 {
-	if (ItemState == EItemState::EIS_PickedUp)
+	if (ItemState == EItemState::EIS_PickUp)
 	{
 		GetWorldTimerManager().SetTimer(
 			PulseTimer,
