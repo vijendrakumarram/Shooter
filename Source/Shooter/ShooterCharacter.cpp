@@ -761,6 +761,16 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 			// Attach the Weapon to the hand socket RightHandSocket
 			HandSocket->AttachActor(WeaponToEquip, GetMesh());
 		}
+		if ( EquippedWeapon == nullptr)
+		{
+			EquipItemDelegate.Broadcast( -1, WeaponToEquip->GetSlotIndex());
+		}
+		else
+		{
+			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
+
+		}
+
 		// Set EquippedWeapon to the newly spawned Weapon
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
@@ -985,17 +995,6 @@ void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
 		bShouldTraceForItems = true;
 	}
 }
-
-/*
-FVector AShooterCharacter::GetCameraInterpLocation()
-{
-	const FVector CameraWorldLocation{ FollowCamera->GetComponentLocation() };
-	const FVector CameraForward{ FollowCamera->GetForwardVector() };
-
-	return CameraWorldLocation + CameraForward * CameraInterpDistance + FVector(0.f, 0.f, CameraInterpElevation);
-}
-*/
-
 void AShooterCharacter::GetPickupItem(AItem* Item)
 {
 	Item->PlayEquipSound();
