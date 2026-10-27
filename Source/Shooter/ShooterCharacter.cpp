@@ -593,6 +593,48 @@ void AShooterCharacter::InitializeInterpLocations()
 	InterpLocations.Add(InterpLocation6);
 	
 }
+void AShooterCharacter::FKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 0) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);
+
+}
+void AShooterCharacter::OneKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 1) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 1);
+}
+void AShooterCharacter::TwoKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 2) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 2);
+}
+void AShooterCharacter::ThreeKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 3) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 3);
+}
+void AShooterCharacter::FourKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 4) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 4);
+
+}
+void AShooterCharacter::FiveKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 5) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 5);
+}
+void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
+{
+	if ((CurrentItemIndex == NewItemIndex) && (NewItemIndex >= Inventory.Num())) return;
+	auto OldEquippedWeapon = EquippedWeapon;
+	auto NewWeapon = Cast<AWeapon>(Inventory[NewItemIndex]);
+	EquipWeapon(NewWeapon);
+
+	OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
+	NewWeapon->SetItemState(EItemState::EIS_Equipped);
+}
 int32 AShooterCharacter::GetInterpLocationIndex()
 {
 	int32 LowestIndex = 1;
@@ -805,8 +847,13 @@ void AShooterCharacter::SelectButtonReleased()
 
 void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 {
-	DropWeapon();
-	EquipWeapon(WeaponToSwap);
+	if (Inventory.Num() - 1 >= EquippedWeapon->GetSlotIndex())
+	{
+		Inventory[EquippedWeapon->GetSlotIndex()] = WeaponToSwap;
+
+	}
+		DropWeapon();
+		EquipWeapon(WeaponToSwap);
 }
 
 void AShooterCharacter::InitializeAmmoMap()
@@ -930,6 +977,22 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this,
 		&AShooterCharacter::CrouchButtonPressed);
+
+	PlayerInputComponent->BindAction("Fkey", IE_Released, this,
+		&AShooterCharacter::FKeyPressed);
+	PlayerInputComponent->BindAction("1key", IE_Released, this,
+		&AShooterCharacter::OneKeyPressed);
+	PlayerInputComponent->BindAction("2key", IE_Released, this,
+		&AShooterCharacter::TwoKeyPressed);
+	PlayerInputComponent->BindAction("3key", IE_Released, this,
+		&AShooterCharacter::ThreeKeyPressed);
+	PlayerInputComponent->BindAction("4key", IE_Released, this,
+		&AShooterCharacter::FourKeyPressed);
+	PlayerInputComponent->BindAction("5key", IE_Released, this,
+		&AShooterCharacter::FiveKeyPressed);
+
+
+
 }
 
 void AShooterCharacter::FinishReloading()
