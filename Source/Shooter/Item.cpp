@@ -29,12 +29,12 @@ AItem::AItem() :
 	InterpLocIndex(0),
 	MaterialIndex(0),
 	bCanChangeCustomDepth(true),
+	// Dynamic Material Parameters
 	GlowAmount(150.f),
 	FresnelExponent(3.f),
 	FresnelReflectFraction(4.f),
-	pulseCurveTime(5.f)
-
-
+	PulseCurveTime(5.f),
+	SlotIndex(0)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -61,7 +61,6 @@ void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
 	// Hide Pickup Widget
 	if (PickupWidget)
 	{
@@ -77,9 +76,10 @@ void AItem::BeginPlay()
 	// Set Item properties based on ItemState
 	SetItemProperties(ItemState);
 
+	// Set custom depth to disabled
 	InitializeCustomDepth();
+
 	StartPulseTimer();
-	
 }
 
 void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -185,6 +185,7 @@ void AItem::SetItemProperties(EItemState State)
 		ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ItemMesh->SetSimulatePhysics(true);
 		ItemMesh->SetEnableGravity(true);
+		ItemMesh->SetVisibility(true);	
 		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		ItemMesh->SetCollisionResponseToChannel(
 			ECollisionChannel::ECC_WorldStatic,
@@ -211,6 +212,21 @@ void AItem::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
+	case EItemState::EIS_PickedUp:
+		PickupWidget->SetVisibility(false);
+		// Set mesh properties
+		ItemMesh->SetSimulatePhysics(false);
+		ItemMesh->SetEnableGravity(false);
+		ItemMesh->SetVisibility(false);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// Set AreaSphere properties
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// Set CollisionBox properties
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
 	}
 }
 
@@ -219,9 +235,12 @@ void AItem::FinishInterping()
 	bInterping = false;
 	if (Character)
 	{
+		// Subtract 1 from the Item Count of the interp location struct
 		Character->IncrementInterpLocItemCount(InterpLocIndex, -1);
 		Character->GetPickupItem(this);
+		
 	}
+	// Set scale back to normal
 	SetActorScale3D(FVector(1.f));
 
 	DisableGlowMaterial();
@@ -243,7 +262,7 @@ void AItem::ItemInterp(float DeltaTime)
 		// Get the item's initial location when the curve started
 		FVector ItemLocation = ItemInterpStartLocation;
 		// Get location in front of the camera
-		const FVector CameraInterpLocation{GetInterpLocation() };
+		const FVector CameraInterpLocation{ GetInterpLocation() };
 
 		// Vector from Item to Camera Interp Location, X and Y are zeroed out
 		const FVector ItemToCamera{ FVector(0.f, 0.f, (CameraInterpLocation - ItemLocation).Z) };
@@ -286,28 +305,21 @@ void AItem::ItemInterp(float DeltaTime)
 	}
 }
 
-// Called every frame
-void AItem::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	// Handle Item Interping when in the EquipInterping state
-	ItemInterp(DeltaTime);
-	UpdatePulse(); 
-}
-
 FVector AItem::GetInterpLocation()
 {
 	if (Character == nullptr) return FVector(0.f);
+
 	switch (ItemType)
 	{
 	case EItemType::EIT_Ammo:
 		return Character->GetInterpLocation(InterpLocIndex).SceneComponent->GetComponentLocation();
-	break;
+		break;
 
 	case EItemType::EIT_Weapon:
 		return Character->GetInterpLocation(0).SceneComponent->GetComponentLocation();
-	break;
+		break;
 	}
+
 	return FVector();
 }
 
@@ -324,7 +336,6 @@ void AItem::PlayPickupSound()
 			}
 		}
 	}
-	
 }
 
 void AItem::EnableCustomDepth()
@@ -364,18 +375,31 @@ void AItem::EnableGlowMaterial()
 	{
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 0);
 	}
-	
 }
 
 void AItem::UpdatePulse()
 {
-	if (ItemState == EItemState::EIS_PickUp) return;
-
-	const float ElapsedTime = GetWorldTimerManager().GetTimerElapsed(PulseTimer);
-	if (PulseCurve)
+	float ElapsedTime{};
+	FVector CurveValue{};
+	switch (ItemState)
 	{
-		const FVector CurveValue{ PulseCurve->GetVectorValue(ElapsedTime)};
-
+	case EItemState::EIS_Pickup:
+		if (PulseCurve)
+		{
+			ElapsedTime = GetWorldTimerManager().GetTimerElapsed(PulseTimer);
+			CurveValue = PulseCurve->GetVectorValue(ElapsedTime);
+		}
+		break;
+	case EItemState::EIS_EquipInterping:
+		if (InterpPulseCurve)
+		{
+			ElapsedTime = GetWorldTimerManager().GetTimerElapsed(ItemInterpTimer);
+			CurveValue = InterpPulseCurve->GetVectorValue(ElapsedTime);
+		}
+		break;
+	}
+	if (DynamicMaterialInstance)
+	{
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowAmount"), CurveValue.X * GlowAmount);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelExponent"), CurveValue.Y * FresnelExponent);
 		DynamicMaterialInstance->SetScalarParameterValue(TEXT("FresnelReflectFraction"), CurveValue.Z * FresnelReflectFraction);
@@ -384,10 +408,9 @@ void AItem::UpdatePulse()
 
 void AItem::DisableGlowMaterial()
 {
-
 	if (DynamicMaterialInstance)
 	{
-		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1.f);
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1);
 	}
 }
 
@@ -406,6 +429,16 @@ void AItem::PlayEquipSound()
 	}
 }
 
+// Called every frame
+void AItem::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	// Handle Item Interping when in the EquipInterping state
+	ItemInterp(DeltaTime);
+	// Get curve values from PulseCurve and set dynamic material parameters
+	UpdatePulse();
+}
+
 void AItem::ResetPulseTimer()
 {
 	StartPulseTimer();
@@ -413,13 +446,9 @@ void AItem::ResetPulseTimer()
 
 void AItem::StartPulseTimer()
 {
-	if (ItemState == EItemState::EIS_PickUp)
+	if (ItemState == EItemState::EIS_Pickup)
 	{
-		GetWorldTimerManager().SetTimer(
-			PulseTimer,
-			this,
-			&AItem::ResetPulseTimer,
-			pulseCurveTime);
+		GetWorldTimerManager().SetTimer(PulseTimer, this, &AItem::ResetPulseTimer, PulseCurveTime);
 	}
 }
 
@@ -433,8 +462,11 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 {
 	// Store a handle to the Character
 	Character = Char;
+
+	// Get array index in InterpLocations with the lowest item count
 	InterpLocIndex = Character->GetInterpLocationIndex();
-	Character->IncrementInterpLocItemCount(InterpLocIndex,1);
+	// Add 1 to the Item Count for this interp location struct
+	Character->IncrementInterpLocItemCount(InterpLocIndex, 1);
 
 	PlayPickupSound();
 
@@ -442,6 +474,7 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 	ItemInterpStartLocation = GetActorLocation();
 	bInterping = true;
 	SetItemState(EItemState::EIS_EquipInterping);
+	GetWorldTimerManager().ClearTimer(PulseTimer);
 
 	GetWorldTimerManager().SetTimer(
 		ItemInterpTimer,
@@ -450,13 +483,9 @@ void AItem::StartItemCurve(AShooterCharacter* Char)
 		ZCurveTime);
 
 	// Get initial Yaw of the Camera
-	const float CameraRotationYaw = static_cast<float>(
-		Character->GetFollowCamera()->GetComponentRotation().Yaw
-		);
+	const double CameraRotationYaw{ Character->GetFollowCamera()->GetComponentRotation().Yaw };
 	// Get initial Yaw of the Item
-	const float ItemRotationYaw = static_cast<float>(
-		GetActorRotation().Yaw
-		);
+	const double ItemRotationYaw{ GetActorRotation().Yaw };
 	// Initial Yaw offset between Camera and Item
 	InterpInitialYawOffset = ItemRotationYaw - CameraRotationYaw;
 
