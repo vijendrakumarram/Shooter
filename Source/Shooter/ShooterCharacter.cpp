@@ -12,14 +12,15 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Item.h"
 #include "Components/WidgetComponent.h"
-#include "Weapon.h" 
+#include "Weapon.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
-
+#include "Ammo.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
+	CameraBoom(CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"))),
 	// Base rates for turning/looking up
 	BaseTurnRate(45.f),
 	BaseLookUpRate(45.f),
@@ -46,20 +47,23 @@ AShooterCharacter::AShooterCharacter() :
 	CrosshairInAirFactor(0.f),
 	CrosshairAimFactor(0.f),
 	CrosshairShootingFactor(0.f),
-	bFireButtonPressed(false),
-	bShouldFire(true),
-	AutomaticFireRate(0.1f),
+	// Bullet fire timer variables
 	ShootTimeDuration(0.05f),
 	bFiringBullet(false),
+	// Automatic fire variables
+	AutomaticFireRate(0.1f),
+	bShouldFire(true),
+	bFireButtonPressed(false),
 	// Item trace variables
 	bShouldTraceForItems(false),
 	OverlappedItemCount(0),
-
+	// Camera interp location variables
 	CameraInterpDistance(250.f),
 	CameraInterpElevation(65.f),
-
+	// Starting ammo amounts
 	Starting9mmAmmo(85),
 	StartingARAmmo(120),
+	// Combat variables
 	CombatState(ECombatState::ECS_Unoccupied),
 	bCrouching(false),
 	BaseMovementSpeed(650.f),
@@ -69,7 +73,8 @@ AShooterCharacter::AShooterCharacter() :
 	BaseGroundFriction(2.f),
 	CrouchingGroundFriction(100.f),
 	bAimingButtonPressed(false),
-	bShouldPlayPickupSound(true),	
+	// Pickup sound timer properties
+	bShouldPlayPickupSound(true),
 	bShouldPlayEquipSound(true),
 	PickupSoundResetTime(0.2f),
 	EquipSoundResetTime(0.2f)
@@ -78,7 +83,7 @@ AShooterCharacter::AShooterCharacter() :
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Create a camera boom (pulls in towards the character if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	//CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 180.f; // The camera follows at this distance behind the character
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
@@ -99,8 +104,11 @@ AShooterCharacter::AShooterCharacter() :
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f); // ... at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
+
+	// Create Hand Scene Component 
 	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComp"));
 
+	// Create Interpolation Components
 	WeaponInterpComp = CreateDefaultSubobject<USceneComponent>(TEXT("Weapon Interpolation Component"));
 	WeaponInterpComp->SetupAttachment(GetFollowCamera());
 
@@ -121,7 +129,6 @@ AShooterCharacter::AShooterCharacter() :
 
 	InterpComp6 = CreateDefaultSubobject<USceneComponent>(TEXT("Interpolation Component 6"));
 	InterpComp6->SetupAttachment(GetFollowCamera());
-
 }
 
 // Called when the game starts or when spawned
@@ -144,6 +151,7 @@ void AShooterCharacter::BeginPlay()
 	InitializeAmmoMap();
 	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 
+	// Create FInterpLocation structs for each interp location. Add to array
 	InitializeInterpLocations();
 }
 
@@ -221,8 +229,9 @@ void AShooterCharacter::FireWeapon()
 	{
 		PlayFireSound();
 		SendBullet();
-		PlayGunfireMontage();
+		PlayGunFireMontage();
 		EquippedWeapon->DecrementAmmo();
+
 		StartFireTimer();
 	}
 }
@@ -269,17 +278,14 @@ void AShooterCharacter::AimingButtonPressed()
 	bAimingButtonPressed = true;
 	if (CombatState != ECombatState::ECS_Reloading)
 	{
-		Aim(); 
-		
+		Aim();
 	}
 }
 
 void AShooterCharacter::AimingButtonReleased()
 {
-	//StopAiming();
 	bAimingButtonPressed = false;
 	StopAiming();
-
 }
 
 void AShooterCharacter::CameraInterpZoom(float DeltaTime)
@@ -429,7 +435,7 @@ void AShooterCharacter::FireButtonReleased()
 void AShooterCharacter::StartFireTimer()
 {
 	CombatState = ECombatState::ECS_FireTimerInProgress;
-		
+
 	GetWorldTimerManager().SetTimer(
 		AutoFireTimer,
 		this,
@@ -437,271 +443,6 @@ void AShooterCharacter::StartFireTimer()
 		AutomaticFireRate);
 }
 
-void AShooterCharacter::ReloadButtonPressed()
-{
-	ReloadWeapon();
-}
-
-void AShooterCharacter::ReloadWeapon()
-{
-	if (CombatState != ECombatState::ECS_Unoccupied) return;
-
-	
-	if (EquippedWeapon == nullptr) return;
-
-	if (CarryingAmmo() && !EquippedWeapon->ClipIsFull())
-	{
-		if (bAiming)
-		{
-			StopAiming();
-		}
-
-		CombatState = ECombatState::ECS_Reloading;
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance && ReloadMontage)
-		{
-			AnimInstance->Montage_Play(ReloadMontage);
-			AnimInstance->Montage_JumpToSection(EquippedWeapon->GetReloadMontageSection());
-		}
-	}
-}
-
-bool AShooterCharacter::CarryingAmmo()
-{
-	if (EquippedWeapon == nullptr) return false;
-
-	auto AmmoType{ EquippedWeapon->GetAmmoType() };
-
-	if(AmmoMap.Contains(AmmoType))
-	{
-		return AmmoMap[AmmoType] > 0;
-	}	
-
-	return false;
-}
-
-void AShooterCharacter::GrabClip()
-{
-	if (EquippedWeapon == nullptr) return;
-	if (HandSceneComponent == nullptr) return;
-
-
-	int32 ClipBoneIndex{ EquippedWeapon->GetItemMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
-	ClipTransform = EquippedWeapon->GetItemMesh()->GetBoneTransform(ClipBoneIndex);
-
-	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepRelative, true);
-	HandSceneComponent->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("Hand_L")));
-	HandSceneComponent->SetWorldTransform(ClipTransform);
-	EquippedWeapon->SetMovingClip(true);
-}	
-	
-
-void AShooterCharacter::ReleaseClip()
-{
-	EquippedWeapon->SetMovingClip(false);
-}
-
-void AShooterCharacter::CrouchButtonPressed()
-{ 
-	if(!GetCharacterMovement()->IsFalling())
-	{
-		bCrouching = !bCrouching;
-	}
-	if (bCrouching)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
-		GetCharacterMovement()->GroundFriction = CrouchingGroundFriction;
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
-		GetCharacterMovement()->GroundFriction = BaseGroundFriction;
-	}
-}
-
-void AShooterCharacter::Jump()
-{
-	if (bCrouching)
-	{
-		bCrouching = false;
-		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
-	}
-	else
-	{
-		ACharacter::Jump();
-	}
-}
-
-void AShooterCharacter::InterpCapsuleHalfHeight(float DeltaTime)
-{
-	float TargetCapsuleHalfHeight{};
-	if (bCrouching)
-	{
-		TargetCapsuleHalfHeight = CrouchingCapsuleHalfHeight;
-	}
-	else
-	{
-		TargetCapsuleHalfHeight = StandingCapsuleHalfHeight;
-	}
-	const float InterpHalfHeight{ FMath::FInterpTo(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),TargetCapsuleHalfHeight,DeltaTime,20.f )};
-	const float DeltaCapsuleHalfHeight{ InterpHalfHeight - GetCapsuleComponent()->GetScaledCapsuleHalfHeight() };
-	const FVector MeshOffset{ 0.f,0.f, -DeltaCapsuleHalfHeight };
-	GetMesh()->AddLocalOffset(MeshOffset);
-	GetCapsuleComponent()->SetCapsuleHalfHeight(InterpHalfHeight);
-	
-}
-
-void AShooterCharacter::Aim()
-{
-	bAiming = true;
-	GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
-}
-void AShooterCharacter::StopAiming()
-{
-	bAiming = false;
-	if (!bCrouching)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
-	}
-}
-
-void AShooterCharacter::PickupAmmo(AAmmo* Ammo)
-{
-}
-
-void AShooterCharacter::InitializeInterpLocations()
-{
-	FInterpLocation WeaponLocation{ WeaponInterpComp, 0 };
-	InterpLocations.Add(WeaponLocation);
-
-	FInterpLocation InterpLocation1{ InterpComp1, 0 };
-	InterpLocations.Add(InterpLocation1);
-
-	FInterpLocation InterpLocation2{ InterpComp2, 0 };
-	InterpLocations.Add(InterpLocation2);
-
-	FInterpLocation InterpLocation3{ InterpComp3, 0 };
-	InterpLocations.Add(InterpLocation3);
-
-	FInterpLocation InterpLocation4{ InterpComp4, 0 };
-	InterpLocations.Add(InterpLocation4);
-
-	FInterpLocation InterpLocation5{ InterpComp5, 0 };
-	InterpLocations.Add(InterpLocation5);
-
-	FInterpLocation InterpLocation6{ InterpComp6, 0};
-	InterpLocations.Add(InterpLocation6);
-	
-}
-void AShooterCharacter::FKeyPressed()
-{
-	if (EquippedWeapon->GetSlotIndex() == 0) return;
-
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);
-}
-
-void AShooterCharacter::OneKeyPressed()
-{
-	if (EquippedWeapon->GetSlotIndex() == 1) return;
-
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 1);
-}
-
-void AShooterCharacter::TwoKeyPressed()
-{
-	if (EquippedWeapon->GetSlotIndex() == 2) return;
-
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 2);
-}
-
-void AShooterCharacter::ThreeKeyPressed()
-{
-	if (EquippedWeapon->GetSlotIndex() == 3) return;
-
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 3);
-}
-
-void AShooterCharacter::FourKeyPressed()
-{
-	if (EquippedWeapon->GetSlotIndex() == 4) return;
-
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 4);
-}
-
-void AShooterCharacter::FiveKeyPressed()
-{
-	if (EquippedWeapon->GetSlotIndex() == 5) return;
-
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 5);
-}
-
-void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
-{
-	if ((CurrentItemIndex == NewItemIndex) && (NewItemIndex >= Inventory.Num()) || (CombatState != ECombatState::ECS_Unoccupied)) return;
-	
-	auto OldEquippedWeapon = EquippedWeapon;
-	
-	auto NewWeapon = Cast<AWeapon>(Inventory[NewItemIndex]);
-	
-	EquipWeapon(NewWeapon);
-
-	OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
-	
-	NewWeapon->SetItemState(EItemState::EIS_Equipped);
-
-	CombatState = ECombatState::ECS_Equipping;
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && EquipMontage)
-	{
-		AnimInstance->Montage_Play(EquipMontage, 1.0f);
-		AnimInstance->Montage_JumpToSection(FName("Equip"));	
-	}
-}
-
-int32 AShooterCharacter::GetInterpLocationIndex()
-{
-	int32 LowestIndex = 1;
-	int32 LowestCount = INT32_MAX;
-	for (int32  i = 1; i < InterpLocations.Num(); i++)
-	{
-		if (InterpLocations[i].ItemCount < LowestCount)
-		{
-			LowestIndex = i;
-			LowestCount = InterpLocations[i].ItemCount;
-		}
-	}
-
-	return LowestIndex;
-}
-void AShooterCharacter::IncrementInterpLocItemCount(int32 Index, int32 Amount)
-{
-	if (Amount < -1 || Amount > 1) return;
-
-	if (InterpLocations.Num() >= Index)
-	{
-		InterpLocations[Index].ItemCount += Amount; 
-	}
-}
-void AShooterCharacter::StartPickupSoundTimer()
-{
-	bShouldPlayPickupSound = false;
-	GetWorldTimerManager().SetTimer(
-		PickupSoundTimer,
-		this,
-		&AShooterCharacter::ResetPickupSoundTimer,
-		PickupSoundResetTime);
-}
-void AShooterCharacter::StartEquipSoundTimer()
-{
-	bShouldPlayEquipSound = false;
-	GetWorldTimerManager().SetTimer(
-		EquipSoundTimer,
-		this,
-		&AShooterCharacter::ResetEquipSoundTimer,
-		EquipSoundResetTime);
-}
 void AShooterCharacter::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
@@ -715,6 +456,7 @@ void AShooterCharacter::AutoFireReset()
 	}
 	else
 	{
+		// Reload Weapon
 		ReloadWeapon();
 	}
 }
@@ -772,17 +514,16 @@ void AShooterCharacter::TraceForItems()
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItem>(ItemTraceResult.GetActor());
-			if(TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
+			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
 			{
 				TraceHitItem = nullptr;
-			} 
+			}
 
 			if (TraceHitItem && TraceHitItem->GetPickupWidget())
 			{
 				// Show Item's Pickup Widget
 				TraceHitItem->GetPickupWidget()->SetVisibility(true);
 				TraceHitItem->EnableCustomDepth();
-					
 			}
 
 			// We hit an AItem last frame
@@ -833,18 +574,20 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 			// Attach the Weapon to the hand socket RightHandSocket
 			HandSocket->AttachActor(WeaponToEquip, GetMesh());
 		}
-		if ( EquippedWeapon == nullptr)
+
+		if (EquippedWeapon == nullptr)
 		{
-			EquipItemDelegate.Broadcast( -1, WeaponToEquip->GetSlotIndex());
+			// -1 == no EquippedWeapon yet. No need to reverse the icon animation
+			EquipItemDelegate.Broadcast(-1, WeaponToEquip->GetSlotIndex());
 		}
 		else
 		{
 			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
-
 		}
 
 		// Set EquippedWeapon to the newly spawned Weapon
 		EquippedWeapon = WeaponToEquip;
+
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
 	}
 }
@@ -868,17 +611,16 @@ void AShooterCharacter::SelectButtonPressed()
 	{
 		TraceHitItem->StartItemCurve(this);
 		TraceHitItem = nullptr;
-	
 	}
 }
 
 void AShooterCharacter::SelectButtonReleased()
 {
-
 }
 
 void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 {
+
 	if (Inventory.Num() - 1 >= EquippedWeapon->GetSlotIndex())
 	{
 		Inventory[EquippedWeapon->GetSlotIndex()] = WeaponToSwap;
@@ -887,6 +629,8 @@ void AShooterCharacter::SwapWeapon(AWeapon* WeaponToSwap)
 
 	DropWeapon();
 	EquipWeapon(WeaponToSwap);
+	TraceHitItem = nullptr;
+	TraceHitItemLastFrame = nullptr;
 }
 
 void AShooterCharacter::InitializeAmmoMap()
@@ -899,11 +643,12 @@ bool AShooterCharacter::WeaponHasAmmo()
 {
 	if (EquippedWeapon == nullptr) return false;
 
-	return  EquippedWeapon->GetAmmo() > 0;
+	return EquippedWeapon->GetAmmo() > 0;
 }
 
 void AShooterCharacter::PlayFireSound()
 {
+	// Play fire sound
 	if (FireSound)
 	{
 		UGameplayStatics::PlaySound2D(this, FireSound);
@@ -912,11 +657,13 @@ void AShooterCharacter::PlayFireSound()
 
 void AShooterCharacter::SendBullet()
 {
+	// Send bullet
 	const USkeletalMeshSocket* BarrelSocket =
 		EquippedWeapon->GetItemMesh()->GetSocketByName("BarrelSocket");
 	if (BarrelSocket)
 	{
-		const FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
+		const FTransform SocketTransform = BarrelSocket->GetSocketTransform(
+			EquippedWeapon->GetItemMesh());
 
 		if (MuzzleFlash)
 		{
@@ -948,14 +695,271 @@ void AShooterCharacter::SendBullet()
 	}
 }
 
-void AShooterCharacter::PlayGunfireMontage()
+void AShooterCharacter::PlayGunFireMontage()
 {
+	// Play Hip Fire Montage
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && HipFireMontage)
 	{
 		AnimInstance->Montage_Play(HipFireMontage);
 		AnimInstance->Montage_JumpToSection(FName("StartFire"));
 	}
+
+	// Start bullet fire timer for crosshairs
+	StartCrosshairBulletFire();
+}
+
+void AShooterCharacter::ReloadButtonPressed()
+{
+	ReloadWeapon();
+}
+
+void AShooterCharacter::ReloadWeapon()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
+	if (EquippedWeapon == nullptr) return;
+
+	// Do we have ammo of the correct type?
+	if (CarryingAmmo() && !EquippedWeapon->ClipIsFull())
+	{
+		if (bAiming)
+		{
+			StopAiming();
+		}
+
+		CombatState = ECombatState::ECS_Reloading;
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && ReloadMontage)
+		{
+			AnimInstance->Montage_Play(ReloadMontage);
+			AnimInstance->Montage_JumpToSection(
+				EquippedWeapon->GetReloadMontageSection());
+		}
+	}
+
+}
+
+bool AShooterCharacter::CarryingAmmo()
+{
+	if (EquippedWeapon == nullptr) return false;
+
+	auto AmmoType = EquippedWeapon->GetAmmoType();
+
+	if (AmmoMap.Contains(AmmoType))
+	{
+		return AmmoMap[AmmoType] > 0;
+	}
+
+	return false;
+}
+
+void AShooterCharacter::GrabClip()
+{
+	if (EquippedWeapon == nullptr) return;
+	if (HandSceneComponent == nullptr) return;
+
+	// Index for the clip bone on the Equipped Weapon
+	int32 ClipBoneIndex{ EquippedWeapon->GetItemMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
+	// Store the transform of the clip
+	ClipTransform = EquippedWeapon->GetItemMesh()->GetBoneTransform(ClipBoneIndex);
+
+	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepRelative, true);
+	HandSceneComponent->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("Hand_L")));
+	HandSceneComponent->SetWorldTransform(ClipTransform);
+
+	EquippedWeapon->SetMovingClip(true);
+}
+
+void AShooterCharacter::ReleaseClip()
+{
+	EquippedWeapon->SetMovingClip(false);
+}
+
+void AShooterCharacter::CrouchButtonPressed()
+{
+	if (!GetCharacterMovement()->IsFalling())
+	{
+		bCrouching = !bCrouching;
+	}
+	if (bCrouching)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
+		GetCharacterMovement()->GroundFriction = CrouchingGroundFriction;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+		GetCharacterMovement()->GroundFriction = BaseGroundFriction;
+	}
+}
+
+void AShooterCharacter::Jump()
+{
+	if (bCrouching)
+	{
+		bCrouching = false;
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+	}
+	else
+	{
+		ACharacter::Jump();
+	}
+}
+
+void AShooterCharacter::InterpCapsuleHalfHeight(float DeltaTime)
+{
+	float TargetCapsuleHalfHeight{};
+	if (bCrouching)
+	{
+		TargetCapsuleHalfHeight = CrouchingCapsuleHalfHeight;
+	}
+	else
+	{
+		TargetCapsuleHalfHeight = StandingCapsuleHalfHeight;
+	}
+	const float InterpHalfHeight{ FMath::FInterpTo(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(), TargetCapsuleHalfHeight, DeltaTime, 20.f) };
+
+	// Negative value if crouching; Positive value if standing
+	const float DeltaCapsuleHalfHeight{ InterpHalfHeight - GetCapsuleComponent()->GetScaledCapsuleHalfHeight() };
+	const FVector MeshOffset{ 0.f, 0.f, -DeltaCapsuleHalfHeight };
+	GetMesh()->AddLocalOffset(MeshOffset);
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(InterpHalfHeight);
+}
+
+void AShooterCharacter::Aim()
+{
+	bAiming = true;
+	GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
+}
+
+void AShooterCharacter::StopAiming()
+{
+	bAiming = false;
+	if (!bCrouching)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+	}
+}
+
+void AShooterCharacter::PickupAmmo(AAmmo* Ammo)
+{
+	// check to see if AmmoMap contains Ammo's AmmoType
+	if (AmmoMap.Find(Ammo->GetAmmoType()))
+	{
+		// Get amount of ammo in our AmmoMap for Ammo's type
+		int32 AmmoCount{ AmmoMap[Ammo->GetAmmoType()] };
+		AmmoCount += Ammo->GetItemCount();
+		// Set the amount of ammo in the Map for this type
+		AmmoMap[Ammo->GetAmmoType()] = AmmoCount;
+	}
+
+	if (EquippedWeapon->GetAmmoType() == Ammo->GetAmmoType())
+	{
+		// Check to see if the gun is empty
+		if (EquippedWeapon->GetAmmo() == 0)
+		{
+			ReloadWeapon();
+		}
+	}
+
+	Ammo->Destroy();
+}
+
+void AShooterCharacter::InitializeInterpLocations()
+{
+	FInterpLocation WeaponLocation{ WeaponInterpComp, 0 };
+	InterpLocations.Add(WeaponLocation);
+
+	FInterpLocation InterpLoc1{ InterpComp1, 0 };
+	InterpLocations.Add(InterpLoc1);
+
+	FInterpLocation InterpLoc2{ InterpComp2, 0 };
+	InterpLocations.Add(InterpLoc2);
+
+	FInterpLocation InterpLoc3{ InterpComp3, 0 };
+	InterpLocations.Add(InterpLoc3);
+
+	FInterpLocation InterpLoc4{ InterpComp4, 0 };
+	InterpLocations.Add(InterpLoc4);
+
+	FInterpLocation InterpLoc5{ InterpComp5, 0 };
+	InterpLocations.Add(InterpLoc5);
+
+	FInterpLocation InterpLoc6{ InterpComp6, 0 };
+	InterpLocations.Add(InterpLoc6);
+}
+
+void AShooterCharacter::FKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 0) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);
+}
+
+void AShooterCharacter::OneKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 1) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 1);
+}
+
+void AShooterCharacter::TwoKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 2) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 2);
+}
+
+void AShooterCharacter::ThreeKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 3) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 3);
+}
+
+void AShooterCharacter::FourKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 4) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 4);
+}
+
+void AShooterCharacter::FiveKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 5) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 5);
+}
+
+void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
+{
+	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num()) || (CombatState != ECombatState::ECS_Unoccupied)) return;
+	auto OldEquippedWeapon = EquippedWeapon;
+	auto NewWeapon = Cast<AWeapon>(Inventory[NewItemIndex]);
+	EquipWeapon(NewWeapon);
+
+	OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
+	NewWeapon->SetItemState(EItemState::EIS_Equipped);
+
+	CombatState = ECombatState::ECS_Equipping;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EquipMontage)
+	{
+		AnimInstance->Montage_Play(EquipMontage, 1.0f);
+		AnimInstance->Montage_JumpToSection(FName("Equip"));
+	}
+}
+
+int32 AShooterCharacter::GetInterpLocationIndex()
+{
+	int32 LowestIndex = 1;
+	int32 LowestCount = INT_MAX;
+	for (int32 i = 1; i < InterpLocations.Num(); i++)
+	{
+		if (InterpLocations[i].ItemCount < LowestCount)
+		{
+			LowestIndex = i;
+			LowestCount = InterpLocations[i].ItemCount;
+		}
+	}
+
+	return LowestIndex;
 }
 
 // Called every frame
@@ -971,6 +975,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 	CalculateCrosshairSpread(DeltaTime);
 	// Check OverlappedItemCount, then trace for items
 	TraceForItems();
+	// Interpolate the capsule half height based on crouching/standing
 	InterpCapsuleHalfHeight(DeltaTime);
 }
 
@@ -1004,54 +1009,62 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		&AShooterCharacter::SelectButtonPressed);
 	PlayerInputComponent->BindAction("Select", IE_Released, this,
 		&AShooterCharacter::SelectButtonReleased);
-		
-	PlayerInputComponent->BindAction("ReloadButton", IE_Released, this,
+
+	PlayerInputComponent->BindAction("ReloadButton", IE_Pressed, this,
 		&AShooterCharacter::ReloadButtonPressed);
 
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this,
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this,
 		&AShooterCharacter::CrouchButtonPressed);
 
-	PlayerInputComponent->BindAction("Fkey", IE_Released, this, &AShooterCharacter::FKeyPressed);
+	PlayerInputComponent->BindAction("FKey", IE_Pressed, this,
+		&AShooterCharacter::FKeyPressed);
+	PlayerInputComponent->BindAction("1Key", IE_Pressed, this,
+		&AShooterCharacter::OneKeyPressed);
+	PlayerInputComponent->BindAction("2Key", IE_Pressed, this,
+		&AShooterCharacter::TwoKeyPressed);
+	PlayerInputComponent->BindAction("3Key", IE_Pressed, this,
+		&AShooterCharacter::ThreeKeyPressed);
+	PlayerInputComponent->BindAction("4Key", IE_Pressed, this,
+		&AShooterCharacter::FourKeyPressed);
+	PlayerInputComponent->BindAction("5Key", IE_Pressed, this,
+		&AShooterCharacter::FiveKeyPressed);
 
-	PlayerInputComponent->BindAction("1key", IE_Released, this, &AShooterCharacter::OneKeyPressed);
-
-	PlayerInputComponent->BindAction("2key", IE_Released, this, &AShooterCharacter::TwoKeyPressed);
-
-	PlayerInputComponent->BindAction("3key", IE_Released, this, &AShooterCharacter::ThreeKeyPressed);
-
-	PlayerInputComponent->BindAction("4key", IE_Released, this, &AShooterCharacter::FourKeyPressed);
-
-	PlayerInputComponent->BindAction("5key", IE_Released, this, &AShooterCharacter::FiveKeyPressed);
 }
 
 void AShooterCharacter::FinishReloading()
 {
+	// Update the Combat State
 	CombatState = ECombatState::ECS_Unoccupied;
 
 	if (bAimingButtonPressed)
 	{
 		Aim();
 	}
-	if (EquippedWeapon == nullptr) return;
 
+	if (EquippedWeapon == nullptr) return;
 	const auto AmmoType{ EquippedWeapon->GetAmmoType() };
 
-	if(AmmoMap.Contains(AmmoType))
+	// Update the AmmoMap
+	if (AmmoMap.Contains(AmmoType))
 	{
-		// Amount of ammo the character is carrying for the equipped weapon
+		// Amount of ammo the Character is carrying of the EquippedWeapon type
 		int32 CarriedAmmo = AmmoMap[AmmoType];
-		// Amount of ammo the weapon needs to be fully loaded
-		const int32 MagEmptySpace = EquippedWeapon->GetMagzineCapacity() - EquippedWeapon->GetAmmo();
+
+		// Space left in the magazine of EquippedWeapon
+		const int32 MagEmptySpace =
+			EquippedWeapon->GetMagazineCapacity() -
+			EquippedWeapon->GetAmmo();
+
 		if (MagEmptySpace > CarriedAmmo)
 		{
-			// Reload with all the ammo we're carrying
+			// Reload the magazine with all the ammo we are carrying
 			EquippedWeapon->ReloadAmmo(CarriedAmmo);
 			CarriedAmmo = 0;
 			AmmoMap.Add(AmmoType, CarriedAmmo);
 		}
 		else
 		{
-			// Reload to full capacity and remove that from the carried ammo
+			// fill the magazine
 			EquippedWeapon->ReloadAmmo(MagEmptySpace);
 			CarriedAmmo -= MagEmptySpace;
 			AmmoMap.Add(AmmoType, CarriedAmmo);
@@ -1092,6 +1105,17 @@ void AShooterCharacter::IncrementOverlappedItemCount(int8 Amount)
 		bShouldTraceForItems = true;
 	}
 }
+
+/* No longer needed; AItem has GetInterpLocation
+FVector AShooterCharacter::GetCameraInterpLocation()
+{
+	const FVector CameraWorldLocation{ FollowCamera->GetComponentLocation() };
+	const FVector CameraForward{ FollowCamera->GetForwardVector() };
+	// Desired = CameraWorldLocation + Forward * A + Up * B
+	return CameraWorldLocation + CameraForward * CameraInterpDistance
+		+ FVector(0.f, 0.f, CameraInterpElevation);
+}*/
+
 void AShooterCharacter::GetPickupItem(AItem* Item)
 {
 	Item->PlayEquipSound();
@@ -1099,16 +1123,22 @@ void AShooterCharacter::GetPickupItem(AItem* Item)
 	auto Weapon = Cast<AWeapon>(Item);
 	if (Weapon)
 	{
-		if (Inventory.Num()<INVENTORY_CAPACITY)
+		if (Inventory.Num() < INVENTORY_CAPACITY)
 		{
 			Weapon->SetSlotIndex(Inventory.Num());
 			Inventory.Add(Weapon);
 			Weapon->SetItemState(EItemState::EIS_PickedUp);
 		}
-		else
+		else // Inventory is full! Swap with EquippedWeapon
 		{
 			SwapWeapon(Weapon);
 		}
+	}
+
+	auto Ammo = Cast<AAmmo>(Item);
+	if (Ammo)
+	{
+		PickupAmmo(Ammo);
 	}
 }
 
@@ -1121,3 +1151,32 @@ FInterpLocation AShooterCharacter::GetInterpLocation(int32 Index)
 	return FInterpLocation();
 }
 
+void AShooterCharacter::IncrementInterpLocItemCount(int32 Index, int32 Amount)
+{
+	if (Amount < -1 || Amount > 1) return;
+
+	if (InterpLocations.Num() >= Index)
+	{
+		InterpLocations[Index].ItemCount += Amount;
+	}
+}
+
+void AShooterCharacter::StartPickupSoundTimer()
+{
+	bShouldPlayPickupSound = false;
+	GetWorldTimerManager().SetTimer(
+		PickupSoundTimer,
+		this,
+		&AShooterCharacter::ResetPickupSoundTimer,
+		PickupSoundResetTime);
+}
+
+void AShooterCharacter::StartEquipSoundTimer()
+{
+	bShouldPlayEquipSound = false;
+	GetWorldTimerManager().SetTimer(
+		PickupSoundTimer,
+		this,
+		&AShooterCharacter::ResetEquipSoundTimer,
+		EquipSoundResetTime);
+}
