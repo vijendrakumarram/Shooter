@@ -27,12 +27,18 @@ UShooterAnimInstance::UShooterAnimInstance() :
 
 }
 
+void UShooterAnimInstance::NativeInitializeAnimation()
+{
+	ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
+}
+
 void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 {
 	if (ShooterCharacter == nullptr)
 	{
 		ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
 	}
+
 	if (ShooterCharacter)
 	{
 		bCrouching = ShooterCharacter->GetCrouching();
@@ -94,11 +100,6 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 	Lean(DeltaTime);
 }
 
-void UShooterAnimInstance::NativeInitializeAnimation()
-{
-	ShooterCharacter = Cast<AShooterCharacter>(TryGetPawnOwner());
-}
-
 void UShooterAnimInstance::TurnInPlace()
 {
 	if (ShooterCharacter == nullptr) return;
@@ -125,6 +126,7 @@ void UShooterAnimInstance::TurnInPlace()
 
 		// 1.0 if turning, 0.0 if not
 		const float Turning{ GetCurveValue(TEXT("Turning")) };
+
 		if (Turning > 0)
 		{
 			bTurningInPlace = true;
