@@ -64,7 +64,7 @@ public:
 	void ThrowWeapon();
 
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
-	FORCEINLINE int32 GetMagzineCapacity() const { return MagzineCapacity; }
+	FORCEINLINE int32 GetMagazineCapacity() const { return MagzineCapacity; }
 
 	/** Called from Character class when firing Weapon */
 	void DecrementAmmo();

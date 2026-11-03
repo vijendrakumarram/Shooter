@@ -134,7 +134,7 @@ protected:
 
 	void SendBullet();
 
-	void PlayGunfireMontage();
+	void PlayGunFireMontage();
 
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
