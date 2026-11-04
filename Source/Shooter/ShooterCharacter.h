@@ -103,6 +103,7 @@ protected:
 
 	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
 
+	int32 GetEmptyInventorySlot();
 		
 	UFUNCTION()
 	void AutoFireReset();
