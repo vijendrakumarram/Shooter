@@ -104,6 +104,10 @@ protected:
 	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
 
 	int32 GetEmptyInventorySlot();
+
+	void HighlightInventorySlot();
+
+	void UnHighlightInventorySlot();
 		
 	UFUNCTION()
 	void AutoFireReset();
@@ -366,8 +370,11 @@ private:
 	UPROPERTY(BluePrintAssignable, Category = Delegates, meta = (AllowPrivateAccess = true))
 	FEquipItemDelegate EquipItemDelegate;
 
-/*	UPROPERTY(BluePrintAssignable, Category = Delegates, meta = (AllowPrivateAccess = true))
-	FHighlightIconDelegate HighlightIconDelegate;*/
+UPROPERTY(BluePrintAssignable, Category = Delegates, meta = (AllowPrivateAccess = true))
+	FHighlightIconDelegate HighlightIconDelegate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = true))
+	int32 HighlightedSlot;
 
 public:
 
