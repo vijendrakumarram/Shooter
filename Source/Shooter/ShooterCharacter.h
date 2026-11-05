@@ -106,8 +106,6 @@ protected:
 	int32 GetEmptyInventorySlot();
 
 	void HighlightInventorySlot();
-
-	void UnHighlightInventorySlot();
 		
 	UFUNCTION()
 	void AutoFireReset();
@@ -418,5 +416,7 @@ public:
 
 	void StartPickupSoundTimer();
 	void StartEquipSoundTimer(); 
+
+	void UnHighlightInventorySlot();
 
 };

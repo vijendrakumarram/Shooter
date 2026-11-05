@@ -516,6 +516,22 @@ void AShooterCharacter::TraceForItems()
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItem>(ItemTraceResult.GetActor());
+			 const auto TraceHitWeapon = Cast<AWeapon>(TraceHitItem); 
+			if (TraceHitWeapon)
+			{
+				if (HighlightedSlot == -1)
+				{
+					HighlightInventorySlot();
+				}
+			}
+			else
+			{
+				if (HighlightedSlot != -1)
+				{
+					UnHighlightInventorySlot();
+				}
+			}
+
 			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
 			{
 				TraceHitItem = nullptr;
