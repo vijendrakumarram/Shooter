@@ -378,7 +378,7 @@ void AItem::OnConstruction(const FTransform& Transform)
 	}
 	EnableGlowMaterial();
 
-	FString RarityTablePath{ TEXT("DataTable'/Game/_Game/DataTables/ItemRarityDataTable.ItemRarityDataTable'") };
+	FString RarityTablePath(TEXT("DataTable'/Game/_Game/DataTable/ItemRarityDataTable.ItemRarityDataTable'"));
 	UDataTable* RarityTableObject = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *RarityTablePath));
 	if (RarityTableObject)
 	{
