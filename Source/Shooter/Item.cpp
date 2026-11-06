@@ -402,6 +402,10 @@ FString RarityTablePath(TEXT("DataTable'/Game/_Game/DataTable/ItemRarityDataTabl
 			DarkColor = RarityRow->DarkColor;
 			NumberOfStars = RarityRow->NumberOfStars;
 			IconBackground = RarityRow->IconBackground;
+			if (GetItemMesh())
+			{
+				GetItemMesh()->SetCustomDepthStencilValue(RarityRow->CustomDepthStencil);
+			}
 		}
 	}
 
