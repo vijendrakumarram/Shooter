@@ -64,6 +64,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 protected:
 	void StopFalling();
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 private:
 	FTimerHandle ThrowWeaponTimer;
 	float ThrowWeaponTime;
@@ -74,7 +77,7 @@ private:
 	int32 Ammo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
-	int32 MagzineCapacity;
+	int32 MagazineCapacity;
 
 	/** The type of weapon */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
@@ -102,7 +105,7 @@ public:
 	void ThrowWeapon();
 
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
-	FORCEINLINE int32 GetMagazineCapacity() const { return MagzineCapacity; }
+	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 
 	/** Called from Character class when firing Weapon */
 	void DecrementAmmo();
