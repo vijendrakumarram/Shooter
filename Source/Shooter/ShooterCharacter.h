@@ -419,4 +419,6 @@ public:
 
 	void UnHighlightInventorySlot();
 
+	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
+
 };
