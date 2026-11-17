@@ -186,12 +186,6 @@ private:
 	float MouseAimingLookUpRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
-	class USoundBase* FireSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
-	class UParticleSystem* MuzzleFlash;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
 	class UAnimMontage* HipFireMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
@@ -232,8 +226,6 @@ private:
 	bool bFireButtonPressed;
 
 	bool bShouldFire;
-
-	float AutomaticFireRate;
 
 	FTimerHandle AutoFireTimer;
 
