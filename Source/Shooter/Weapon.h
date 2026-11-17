@@ -82,6 +82,9 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundCue* FireSound;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName BoneToHide;
 };
 /**
  *
@@ -98,6 +101,9 @@ protected:
 	void StopFalling();
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+
+	virtual void BeginPlay() override;
 
 private:
 	FTimerHandle ThrowWeaponTimer;
@@ -157,6 +163,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = DataTable, meta = (AllowPrivateAccess = "true"))
 	USoundCue* FireSound;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = DataTable, meta = (AllowPrivateAccess = "true"))
+	FName BoneToHide;
 
 public:
 	/** Adds an impulse to the Weapon */
