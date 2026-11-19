@@ -106,6 +106,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	void FinishMovingSlide();
+	void UpdateSlideDisplacement();
 
 private:
 	FTimerHandle ThrowWeaponTimer;
