@@ -448,7 +448,7 @@ void AShooterCharacter::StartFireTimer()
 	GetWorldTimerManager().SetTimer(
 		AutoFireTimer,
 		this,
-		&AShooterCharacter::AutoFireReset,
+		&AShooterCharacter::AutoFireReset,	
 		EquippedWeapon->GetAutoFireRate());
 	
 }
@@ -456,10 +456,10 @@ void AShooterCharacter::StartFireTimer()
 void AShooterCharacter::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
-
+	if (EquippedWeapon == nullptr) return;
 	if (WeaponHasAmmo())
 	{
-		if (bFireButtonPressed)
+		if (bFireButtonPressed && EquippedWeapon->GetbAutomatic())
 		{
 			FireWeapon();
 		}
