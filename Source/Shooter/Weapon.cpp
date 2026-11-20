@@ -115,12 +115,9 @@ void AWeapon::OnConstruction(const FTransform& Transform)
 			CrosshairsTop = WeaponDataRow->CrosshairsTop;
 			CrosshairsBottom = WeaponDataRow->CrosshairsBottom;
 			AutoFireRate = WeaponDataRow->AutoFireRate;
-			//MuzzleFlash = WeaponDataRow->MuzzleFlash;
+			MuzzleFlash = WeaponDataRow->MuzzleFlash;
 			FireSound = WeaponDataRow->FireSound;
 			BoneToHide = WeaponDataRow->BoneToHide;
-
-
-
 		}
 
 
